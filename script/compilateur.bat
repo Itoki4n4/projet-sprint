@@ -26,7 +26,6 @@ for /r "%sourceDirectory%" %%G in (*.java) do (
     rem Ajouter le fichier Java à la liste des fichiers à compiler
     set "javaFiles=!javaFiles! "%%G""
 )
-
 rem Construire le chemin de classe pour toutes les bibliothèques dans le dossier "lib"
 set "classpath="
 for %%I in ("%libDirectory%\*.jar") do (
