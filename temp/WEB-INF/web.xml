@@ -10,7 +10,7 @@
         <servlet-class>mg.itu.prom16.FrontController</servlet-class>
         <init-param>
             <param-name>ControllerPackage</param-name>
-            <param-value>mg.itu</param-value>
+            <param-value>mg.itu.controller</param-value>
         </init-param>
     </servlet>
     <!-- <servlet>

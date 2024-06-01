@@ -19,7 +19,7 @@ public class Mapping {
 
     @Override
     public String toString() {
-        return "Mapping{" +
+        return getClass().getSimpleName()+":{" +
                 "className='" + className + '\'' +
                 ", methodName='" + methodName + '\'' +
                 '}';
