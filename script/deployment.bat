@@ -9,7 +9,7 @@ set conf=.\..\..\test\conf
 set lib=.\..\lib
 set src=.\..\src
 set bin=.\..\bin
-set package=mg\itu
+@REM set package=mg\itu
 set destination=C:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps
 
 rem Vérifier si le dossier temp existe
