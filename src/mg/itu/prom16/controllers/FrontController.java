@@ -4,9 +4,12 @@ import mg.itu.prom16.annotations.*;
 import mg.itu.prom16.models.ModelView;  // Import correct du ModelView
 import mg.itu.prom16.map.*;
 import java.io.*;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+
 import jakarta.servlet.RequestDispatcher;  // Import correct pour RequestDispatcher
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -18,12 +21,17 @@ public class FrontController extends HttpServlet {
     private String controllerPackage;
     boolean checked = false;
     HashMap<String, Mapping> lien = new HashMap<>();
+    String error="";
 
     @Override
     public void init() throws ServletException {
         super.init();
         controllerPackage = getInitParameter("controller-package");
-        this.scan();
+        try{
+            this.scan();
+        }catch(Exception e){
+            error=e.getMessage();
+        }
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -33,17 +41,22 @@ public class FrontController extends HttpServlet {
         String controllerSearched = requestUrlSplitted[requestUrlSplitted.length - 1];
 
         response.setContentType("text/html");
-
-        if (!lien.containsKey(controllerSearched)) {
+        if(error != ""){
+            out.println(error);
+        }
+        // else if(controllerPackage==null){
+        //     out.println("le package n'existe pas");
+        // }
+        else if(!lien.containsKey(controllerSearched)) {
             out.println("<p>" + "Méthode non trouvée." + "</p>");
-        } else {
+        } 
+        else {
             try {
                 Mapping mapping = lien.get(controllerSearched);
                 Class<?> clazz = Class.forName(mapping.getClassName());
                 Method method = clazz.getMethod(mapping.getMethodeName());
                 Object object = clazz.getDeclaredConstructor().newInstance();
                 Object returnValue = method.invoke(object);
-
                 if (returnValue instanceof String) {
                     out.println("Méthode trouvée dans " + (String) returnValue);
                 } else if (returnValue instanceof ModelView) {
@@ -75,20 +88,25 @@ public class FrontController extends HttpServlet {
         processRequest(request, response);
     }
 
-    public void scan() {
+    public void scan()throws Exception{
         try {
+    
             String classesPath = getServletContext().getRealPath("/WEB-INF/classes");
             String decodedPath = URLDecoder.decode(classesPath, "UTF-8");
             String packagePath = decodedPath + "\\" + controllerPackage.replace('.', '\\');
             File packageDirectory = new File(packagePath);
-            if (packageDirectory.exists() && packageDirectory.isDirectory()) {
+            if(!packageDirectory.exists() || !packageDirectory.isDirectory()){
+                throw new Exception("Package n'existe pas");
+            }
+            
+            else {
                 File[] classFiles = packageDirectory.listFiles((dir, name) -> name.endsWith(".class"));
                 if (classFiles != null) {
                     for (File classFile : classFiles) {
                         String className = controllerPackage + '.'
                                 + classFile.getName().substring(0, classFile.getName().length() - 6);
                         try {
-                            Class<?> classe = Class.forName(className);
+                            Class<?> classe = Class.forName(className); 
                             if (classe.isAnnotationPresent(Controller.class)) {
                                 controller.add(classe.getSimpleName());
 
@@ -98,19 +116,26 @@ public class FrontController extends HttpServlet {
                                     if (methode.isAnnotationPresent(Get.class)) {
                                         Mapping map = new Mapping(className, methode.getName());
                                         String valeur = methode.getAnnotation(Get.class).value();
-                                        lien.put(valeur, map);
+                                        if(lien.containsKey(valeur)){
+                                            throw new Exception("double url"+valeur);
+                                        }else{
+                                            lien.put(valeur, map);
+                                        }
                                     }
                                 }
                             }
-                        } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
+                        } catch (Exception e) {
+                           throw e;
                         }
 
                     }
                 }
+                else{
+                    throw new Exception("le package est vide");
+                }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw e;
         }
     }
 }
