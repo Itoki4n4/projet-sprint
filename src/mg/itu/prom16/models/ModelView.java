@@ -11,7 +11,7 @@ public class ModelView {
         this.data = new HashMap<>();
     }
 
-    public void addObject(String name, Object value) {
+    public void addAttribute(String name, Object value) {
         data.put(name, value);
     }
 
